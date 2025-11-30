@@ -5,19 +5,16 @@ const nameEl = document.getElementById("name");
 const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
-const donationSound = new Audio("sounds/success.wav");
+const donationSound = new Audio("https://YOUR_DOMAIN/sounds/success.wav"); // hosted URL
 
-let lastDonationId = null; // Prevent duplicate triggers
+let lastDonationId = null;
 
 function showDonation(data) {
-    // Skip incomplete donations
     if (!data.UserId || !data.Username || !data.Amount) return;
-
-    // Prevent duplicate display
     if (lastDonationId === data.UserId + data.Amount + data.Message) return;
     lastDonationId = data.UserId + data.Amount + data.Message;
 
-    gifEl.src = "gifs/donation.gif";
+    gifEl.src = "https://YOUR_DOMAIN/gifs/donation.gif"; // hosted URL
     nameEl.textContent = data.Username;
     amountEl.textContent = `${data.Amount} Robux`;
     messageEl.textContent = data.Message;
@@ -25,14 +22,6 @@ function showDonation(data) {
     // Play sound
     donationSound.currentTime = 0;
     donationSound.play();
-
-    // Browser TTS
-    if ('speechSynthesis' in window) {
-        const msg = new SpeechSynthesisUtterance(
-            `${data.Username} donated ${data.Amount} Robux. ${data.Message}`
-        );
-        speechSynthesis.speak(msg);
-    }
 
     overlay.classList.add("show");
 
