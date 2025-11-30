@@ -5,7 +5,7 @@ const nameEl = document.getElementById("name");
 const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
-const donationSound = new Audio("https://YOUR_DOMAIN/sounds/success.wav"); // hosted URL
+const donationSound = new Audio("https://officialquataun.github.io/my-tts-overlay/sounds/success.wav"); // hosted URL
 
 let lastDonationId = null;
 
