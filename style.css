@@ -1,7 +1,7 @@
 body, html {
   margin: 0;
   padding: 0;
-  background: transparent; /* Important for OBS/Streamlabs browser source */
+  background: transparent; /* important for OBS/Streamlabs */
   overflow: hidden;
 }
 
@@ -17,7 +17,8 @@ body, html {
 }
 
 #gif {
-  width: 300px; /* adjust as needed */
+  display: none; /* hidden until donation */
+  width: 300px; /* adjust size as needed */
   height: auto;
   z-index: 1;
 }
