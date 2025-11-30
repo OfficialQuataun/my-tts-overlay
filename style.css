@@ -1,7 +1,9 @@
 body, html {
   margin: 0;
   padding: 0;
-  background: transparent; /* important for OBS/Streamlabs */
+  width: 100%;
+  height: 100%;
+  background: transparent;
   overflow: hidden;
 }
 
@@ -19,34 +21,34 @@ body, html {
 }
 
 #gif {
-  display: none; /* shown only when donation triggers */
-  width: 400px; /* increase size for visibility */
+  display: none; /* hidden until donation triggers */
+  width: 600px; /* bigger for OBS */
   height: auto;
   z-index: 1;
 }
 
 #text {
   position: absolute;
-  top: 20%; /* move lower if needed */
+  top: 15%;
   width: 100%;
   text-align: center;
   color: white;
   font-family: Arial, sans-serif;
-  text-shadow: 2px 2px 5px black;
+  text-shadow: 2px 2px 6px black;
   z-index: 2;
 }
 
 #name {
-  font-size: 36px;
+  font-size: 48px;
   font-weight: bold;
 }
 
 #amount {
-  font-size: 28px;
+  font-size: 36px;
   margin-top: 5px;
 }
 
 #message {
-  font-size: 24px;
+  font-size: 30px;
   margin-top: 5px;
 }
