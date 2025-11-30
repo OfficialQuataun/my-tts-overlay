@@ -1,71 +1,64 @@
-// URL query params
+// Overlay query params
 const urlParams = new URLSearchParams(window.location.search);
-const targetUserId = Number(urlParams.get("userid")); // show only this user
+const targetUserId = Number(urlParams.get("userid"));
 const minAmount = parseInt(urlParams.get("min")) || 0;
 const maxMessageLength = parseInt(urlParams.get("max")) || 999;
 
 const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
 const overlay = document.getElementById("overlay");
+const gifEl = document.getElementById("gif");
 const nameEl = document.getElementById("name");
 const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
-const gifEl = document.getElementById("gif");
 const donationSound = new Audio("sounds/success.wav");
-
-// preload sound
 donationSound.volume = 1;
 donationSound.load();
 
-// queue system
+// Queue and duplicate handling
 let donationQueue = [];
-let isSpeaking = false;
-
-// track shown donations to prevent duplicates
+let isProcessing = false;
 const shownDonations = new Set();
 
 function processQueue() {
-  if (isSpeaking || donationQueue.length === 0) return;
-  isSpeaking = true;
+  if (isProcessing || donationQueue.length === 0) return;
+  isProcessing = true;
 
   const data = donationQueue.shift();
 
-  // show GIF
+  // Reset and show GIF
   gifEl.style.display = "block";
   gifEl.src = ""; // reset GIF
-  gifEl.src = "gifs/donation.gif"; // restart GIF
+  gifEl.src = "gifs/donation.gif"; // play once
 
-  // overlay text
+  // Overlay text
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  messageEl.textContent = data.Message; // only message, no "via Developer Donate"
+  messageEl.textContent = data.Message; // only show message
 
-  // play sound
+  // Play sound
   donationSound.currentTime = 0;
-  donationSound.play().catch(e => console.warn("Sound failed:", e));
+  donationSound.play().catch(() => {});
 
-  // TTS reads with "via Developer Donate"
+  // TTS
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(
       `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
     );
-    msg.onend = () => {
-      overlay.classList.remove("show");
-      gifEl.style.display = "none";
-      isSpeaking = false;
-      processQueue();
-    };
+    msg.onend = () => finishDonation();
     overlay.classList.add("show");
     speechSynthesis.speak(msg);
   } else {
     overlay.classList.add("show");
-    setTimeout(() => {
-      overlay.classList.remove("show");
-      gifEl.style.display = "none";
-      isSpeaking = false;
-      processQueue();
-    }, 7000);
+    setTimeout(finishDonation, 7000);
   }
+}
+
+function finishDonation() {
+  overlay.classList.remove("show");
+  gifEl.style.display = "none";
+  isProcessing = false;
+  processQueue();
 }
 
 function showDonation(data) {
@@ -74,10 +67,9 @@ function showDonation(data) {
   if (data.Amount < minAmount) return;
   if (data.Message.length > maxMessageLength) return;
 
-  // prevent duplicates
-  const donationKey = `${data.UserId}-${data.Amount}-${data.Message}`;
-  if (shownDonations.has(donationKey)) return;
-  shownDonations.add(donationKey);
+  const key = `${data.UserId}-${data.Amount}-${data.Message}`;
+  if (shownDonations.has(key)) return;
+  shownDonations.add(key);
 
   donationQueue.push(data);
   processQueue();
