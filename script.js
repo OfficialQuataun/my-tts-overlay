@@ -31,7 +31,7 @@ function processQueue() {
   gifEl.src = "gifs/donation.gif";
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  messageEl.textContent = `(via Developer Donate) ${data.Message}`;
+  messageEl.textContent = data.Message; // overlay shows only message
 
   donationSound.currentTime = 0;
   donationSound.play().catch(e => console.warn("Sound failed:", e));
@@ -48,7 +48,7 @@ function processQueue() {
     overlay.classList.add("show");
     speechSynthesis.speak(msg);
   } else {
-    // fallback for browsers without TTS
+    // fallback if no TTS
     overlay.classList.add("show");
     setTimeout(() => {
       overlay.classList.remove("show");
