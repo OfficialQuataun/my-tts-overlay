@@ -33,14 +33,24 @@ function showDonation(data) {
     if (lastDonationId === donationId) return;
     lastDonationId = donationId;
 
+    // Update overlay elements
     gifEl.src = "https://officialquataun.github.io/my-tts-overlay/gifs/donation.gif";
     nameEl.textContent = data.Username;
     amountEl.textContent = `${data.Amount} Robux`;
-    messageEl.textContent = data.Message; // No "via Developer Donate" on screen
+    messageEl.textContent = data.Message; // only message, no extra text
 
+    // Play sound
     donationSound.currentTime = 0;
     donationSound.play();
 
+    // Text-to-Speech
+    if ('speechSynthesis' in window) {
+        const ttsMessage = `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`;
+        const utterance = new SpeechSynthesisUtterance(ttsMessage);
+        speechSynthesis.speak(utterance);
+    }
+
+    // Show overlay
     overlay.classList.add("show");
     setTimeout(() => overlay.classList.remove("show"), 7000);
 }
