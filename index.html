@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8" />
   <title>Donation Overlay</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="overlay" class="hidden">
+    <img id="gif" class="donation-gif" />
 
-<div id="overlay" class="hidden">
-  <img id="gif" src="" />
-  <div id="text">
-    <h2 id="name"></h2>
-    <h3 id="amount"></h3>
-    <p id="message"></p>
+    <div class="text-box">
+      <div id="name" class="donor-name"></div>
+      <div id="amount" class="donation-amount"></div>
+      <div id="message" class="donation-message"></div>
+    </div>
   </div>
-</div>
 
-<!-- Hidden frame for TTS magic -->
-<iframe id="tts-frame" style="display:none;"></iframe>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
