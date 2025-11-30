@@ -1,7 +1,7 @@
-body, html {
+html, body {
     margin: 0;
     padding: 0;
-    background-color: transparent; /* OBS browser source transparency */
+    background: transparent; /* OBS transparency */
     overflow: hidden;
 }
 
@@ -13,7 +13,7 @@ body, html {
     text-align: center;
     opacity: 0;
     transition: opacity 0.3s;
-    pointer-events: none; /* Ensure clicks pass through */
+    pointer-events: none;
 }
 
 #overlay.show {
@@ -21,7 +21,7 @@ body, html {
 }
 
 #gif {
-    width: 400px;
+    width: 500px;
     height: auto;
     display: block;
     margin: 0 auto 20px;
@@ -32,18 +32,18 @@ body, html {
 }
 
 #name {
-    font-size: 36px;
+    font-size: 40px;
     font-weight: bold;
 }
 
 #amount {
-    font-size: 32px;
+    font-size: 36px;
     color: #00ffcc;
     margin-top: 5px;
 }
 
 #message {
-    font-size: 28px;
+    font-size: 30px;
     margin-top: 10px;
     color: #f0f0f0;
 }
