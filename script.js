@@ -1,81 +1,39 @@
-// UNLOCK TTS IN OBS
-window.addEventListener("load", () => {
-  try {
-    const unlock = new SpeechSynthesisUtterance(" ");
-    window.speechSynthesis.speak(unlock);
-  } catch (e) {
-    console.warn("TTS unlock failed:", e);
-  }
-});
-
 const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
 const overlay = document.getElementById("overlay");
-const gifEl = document.getElementById("gif");
 const nameEl = document.getElementById("name");
 const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
-
-// SOUND SETUP
+const gifEl = document.getElementById("gif");
+const ttsAudio = new Audio();
 const donationSound = new Audio("sounds/success.wav");
-donationSound.volume = 1.0;
 
-// Show donation on screen
 function showDonation(data) {
-  console.log("Donation received:", data);
+  if (!data.UserId || !data.Username || !data.Amount) return;
 
-  // Validate
-  if (!data.Username || !data.Amount) return;
-
-  // GIF
   gifEl.src = "gifs/donation.gif";
-
-  // TEXT
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  messageEl.textContent = data.Message || "";
+  messageEl.textContent = data.Message;
 
-  // SOUND
+  // Play donation sound
   donationSound.currentTime = 0;
-  donationSound.play().catch(err => console.warn("Sound error:", err));
+  donationSound.play();
 
- // TTS
-try {
-  if ("speechSynthesis" in window) {
-    const tts = new SpeechSynthesisUtterance(
-      `${data.Username} donated ${data.Amount} Robux, via Developer Donate. ${data.Message || ""}`
-    );
-    tts.rate = 1;
-    tts.pitch = 1;
-
-    window.speechSynthesis.cancel(); // stop overlap
-    window.speechSynthesis.speak(tts);
-  } else {
-    console.warn("Browser has no TTS support");
+  // Play TTS MP3
+  if (data.TTS) {
+    ttsAudio.src = data.TTS;
+    ttsAudio.play().catch(err => console.log("TTS blocked", err));
   }
-} catch (err) {
-  console.error("TTS Failed:", err);
-}
 
-  // Show overlay
   overlay.classList.add("show");
 
-  // Hide after 7 seconds
   setTimeout(() => {
     overlay.classList.remove("show");
   }, 7000);
 }
 
-// WebSocket Listener
-socket.onopen = () => console.log("WebSocket Connected.");
-
 socket.onmessage = (event) => {
-  try {
-    const data = JSON.parse(event.data);
-    showDonation(data);
-  } catch (err) {
-    console.error("WS parse error:", err);
-  }
+  const data = JSON.parse(event.data);
+  showDonation(data);
 };
-
-socket.onerror = (err) => console.error("WebSocket Error:", err);
