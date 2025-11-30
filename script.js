@@ -1,3 +1,13 @@
+// UNLOCK TTS IN OBS
+window.addEventListener("load", () => {
+  try {
+    const unlock = new SpeechSynthesisUtterance(" ");
+    window.speechSynthesis.speak(unlock);
+  } catch (e) {
+    console.warn("TTS unlock failed:", e);
+  }
+});
+
 const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
 const overlay = document.getElementById("overlay");
@@ -29,14 +39,23 @@ function showDonation(data) {
   donationSound.currentTime = 0;
   donationSound.play().catch(err => console.warn("Sound error:", err));
 
-  // TTS
+ // TTS
+try {
   if ("speechSynthesis" in window) {
     const tts = new SpeechSynthesisUtterance(
       `${data.Username} donated ${data.Amount} Robux, via Developer Donate. ${data.Message || ""}`
     );
-    window.speechSynthesis.cancel();
-    speechSynthesis.speak(tts);
+    tts.rate = 1;
+    tts.pitch = 1;
+
+    window.speechSynthesis.cancel(); // stop overlap
+    window.speechSynthesis.speak(tts);
+  } else {
+    console.warn("Browser has no TTS support");
   }
+} catch (err) {
+  console.error("TTS Failed:", err);
+}
 
   // Show overlay
   overlay.classList.add("show");
