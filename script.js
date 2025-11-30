@@ -1,4 +1,4 @@
-// CHANGE THIS TO YOUR KOYEB SERVER
+// YOUR REAL SERVER URL
 const socket = new WebSocket("wss://officialqua-tts-server-69.deno.dev/");
 
 // load sound
@@ -38,7 +38,7 @@ socket.onmessage = (event) => {
     showDonation(data);
 };
 
-// ⏱ TEST MODE — trigger every 10 seconds
+// test mode — every 10 seconds
 setInterval(() => {
     showDonation({
         username: "TestUser",
