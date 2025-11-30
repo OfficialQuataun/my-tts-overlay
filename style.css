@@ -1,5 +1,5 @@
 body {
-    background: black; /* <<< changed from transparent */
+    background: black;
     margin: 0;
     overflow: hidden;
     font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@ body {
     left: 20px;
     width: 350px;
     padding: 15px;
-    background: rgba(0, 0, 0, 0.8); /* darker for gif visibility */
+    background: rgba(0, 0, 0, 0.8);
     border-radius: 12px;
     color: white;
     display: flex;
