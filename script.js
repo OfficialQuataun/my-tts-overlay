@@ -2,7 +2,7 @@
 const socket = new WebSocket("wss://officialqua-tts-server-69.deno.dev/");
 
 // load sound
-const donationSound = new Audio("/sounds/success.wav");
+const donationSound = new Audio("sounds/success.wav");
 donationSound.volume = 1.0;
 
 // elements
