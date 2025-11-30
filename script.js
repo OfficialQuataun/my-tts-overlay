@@ -1,4 +1,4 @@
-// Overlay query params
+// Query parameters for filtering donations
 const urlParams = new URLSearchParams(window.location.search);
 const targetUserId = Number(urlParams.get("userid"));
 const minAmount = parseInt(urlParams.get("min")) || 0;
@@ -15,11 +15,12 @@ const donationSound = new Audio("sounds/success.wav");
 donationSound.volume = 1;
 donationSound.load();
 
-// Queue and duplicate handling
+// Donation queue system
 let donationQueue = [];
 let isProcessing = false;
 const shownDonations = new Set();
 
+// Process one donation at a time
 function processQueue() {
   if (isProcessing || donationQueue.length === 0) return;
   isProcessing = true;
@@ -27,40 +28,43 @@ function processQueue() {
   const data = donationQueue.shift();
 
   // Reset and show GIF
+  gifEl.src = ""; 
+  gifEl.src = "gifs/donation.gif";
   gifEl.style.display = "block";
-  gifEl.src = ""; // reset GIF
-  gifEl.src = "gifs/donation.gif"; // play once
 
-  // Overlay text
+  // Set overlay text
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  messageEl.textContent = data.Message; // only show message
+  messageEl.textContent = data.Message;
 
-  // Play sound
+  // Play donation sound
   donationSound.currentTime = 0;
   donationSound.play().catch(() => {});
+
+  // Show overlay
+  overlay.classList.add("show");
 
   // TTS
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(
       `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
     );
-    msg.onend = () => finishDonation();
-    overlay.classList.add("show");
+    msg.onend = () => hideOverlay();
     speechSynthesis.speak(msg);
   } else {
-    overlay.classList.add("show");
-    setTimeout(finishDonation, 7000);
+    setTimeout(hideOverlay, 7000);
   }
 }
 
-function finishDonation() {
+// Hide overlay after donation
+function hideOverlay() {
   overlay.classList.remove("show");
   gifEl.style.display = "none";
   isProcessing = false;
   processQueue();
 }
 
+// Queue donations, prevent duplicates
 function showDonation(data) {
   if (!data.UserId || !data.Username || !data.Amount) return;
   if (targetUserId && data.UserId !== targetUserId) return;
@@ -84,3 +88,9 @@ socket.onmessage = (event) => {
 socket.onopen = () => console.log("Connected to donation server");
 socket.onclose = () => console.warn("Disconnected from donation server");
 socket.onerror = (err) => console.error("WebSocket error:", err);
+
+// Optional: trigger TTS in OBS/Streamlabs manually once to allow autoplay
+document.body.addEventListener('click', () => {
+  const msg = new SpeechSynthesisUtterance("Overlay ready");
+  speechSynthesis.speak(msg);
+}, { once: true });
