@@ -1,37 +1,37 @@
+// CHANGE THIS TO YOUR SERVER URL!!
 const socket = new WebSocket("wss://officialqua-tts-server-69.deno.dev/");
 
+const donationSound = new Audio("/sounds/success.wav");
+
+// overlay elements
+const overlay = document.getElementById("overlay");
+const nameEl = document.getElementById("name");
+const amountEl = document.getElementById("amount");
+const messageEl = document.getElementById("message");
+const gifEl = document.getElementById("gif");
+
 socket.onopen = () => {
-  console.log("Connected to TTS server!");
+    console.log("Connected to TTS server.");
 };
 
 socket.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log("Donation received:", data);
+    const data = JSON.parse(event.data);
 
-  showPopup(data);
-  speakTTS(data);
+    // update overlay
+    nameEl.textContent = data.username;
+    amountEl.textContent = `${data.amount} Robux`;
+    messageEl.textContent = data.message;
+    gifEl.src = data.gif;
+
+    // play sound
+    donationSound.currentTime = 0;
+    donationSound.play();
+
+    // show overlay
+    overlay.classList.add("show");
+
+    // hide after 7 seconds
+    setTimeout(() => {
+        overlay.classList.remove("show");
+    }, 7000);
 };
-
-function speakTTS(data) {
-  const text = `${data.username} donated ${data.amount} Robux. ${data.message}`;
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.rate = 1.0;
-  utter.pitch = 1.0;
-  speechSynthesis.speak(utter);
-}
-
-function showPopup(data) {
-  const popup = document.getElementById("popup");
-  const gif = document.getElementById("gif");
-  const textDiv = document.getElementById("text");
-
-  gif.src = data.gif;
-  textDiv.textContent = `${data.username}: ${data.message}`;
-
-  popup.style.display = "flex";
-
-  // Hide after 7 seconds
-  setTimeout(() => {
-    popup.style.display = "none";
-  }, 7000);
-}
