@@ -9,17 +9,19 @@ const donationSound = new Audio("sounds/success.wav");
 
 // Show donation overlay
 function showDonation(data) {
-  // Remove any fake/test donations
+  // Ignore incomplete donations
   if (!data.UserId || !data.Username || !data.Amount) return;
 
   gifEl.src = "gifs/donation.gif";
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  messageEl.textContent = data.Message;
+  // ALWAYS append "via Developer Donate"
+  messageEl.textContent = `${data.Message} (via Developer Donate)`;
 
   donationSound.currentTime = 0;
   donationSound.play();
 
+  // TTS
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(
       `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
