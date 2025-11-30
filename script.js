@@ -1,4 +1,6 @@
-const socket = new WebSocket("wss://tts-donation-server.onrender.com");
+// Simulate WebSocket server for testing
+// Replace this with your real server URL later
+// const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
 const overlay = document.getElementById("overlay");
 const nameEl = document.getElementById("name");
@@ -7,28 +9,14 @@ const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
 const donationSound = new Audio("sounds/success.wav");
 
-let lastDonationId = null;
-
 const params = new URLSearchParams(window.location.search);
 const filterUserId = params.get("userid");
 const minAmount = parseInt(params.get("min")) || 0;
 const maxMessageLength = parseInt(params.get("max")) || Infinity;
 
-// Function to trigger TTS
-function speak(text) {
-    if (!('speechSynthesis' in window)) return;
+let lastDonationId = null;
 
-    // Cancel previous TTS if any
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    window.speechSynthesis.speak(utterance);
-}
-
+// Function to show donation
 function showDonation(data) {
     if (!data.UserId || !data.Username || !data.Amount) return;
     if (filterUserId && data.UserId.toString() !== filterUserId) return;
@@ -36,7 +24,7 @@ function showDonation(data) {
     if (data.Message.length > maxMessageLength) return;
 
     const donationId = `${data.UserId}-${data.Amount}-${data.Message}`;
-    if (lastDonationId === donationId) return; // prevent repeats
+    if (lastDonationId === donationId) return;
     lastDonationId = donationId;
 
     gifEl.src = "gifs/donation.gif";
@@ -48,15 +36,35 @@ function showDonation(data) {
     donationSound.play();
 
     // TTS
-    const ttsText = `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`;
-    speak(ttsText);
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const tts = new SpeechSynthesisUtterance(
+            `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
+        );
+        speechSynthesis.speak(tts);
+    }
 
     overlay.classList.add("show");
     setTimeout(() => overlay.classList.remove("show"), 7000);
 }
 
-// Listen for donation events
+// --- TEST DONATION ---
+// Remove after testing
+setInterval(() => {
+    showDonation({
+        UserId: "1069987229",
+        Username: "TestUser",
+        Amount: 25,
+        Message: "This is a test donation!"
+    });
+}, 10000);
+
+// --- Real WebSocket ---
+// Uncomment when using live server
+/*
+const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     showDonation(data);
 };
+*/
