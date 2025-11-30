@@ -1,6 +1,6 @@
 // URL query params
 const urlParams = new URLSearchParams(window.location.search);
-const targetUserId = Number(urlParams.get("userid")); // only show donations for this UserId
+const targetUserId = Number(urlParams.get("userid")); // filter by UserId
 const minAmount = parseInt(urlParams.get("min")) || 0;
 const maxMessageLength = parseInt(urlParams.get("max")) || 999;
 
@@ -13,15 +13,15 @@ const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
 const donationSound = new Audio("sounds/success.wav");
 
-// Preload sound
+// preload sound
 donationSound.volume = 1;
 donationSound.load();
 
-// Queue system for multiple donations
+// donation queue
 let donationQueue = [];
 let isSpeaking = false;
 
-// Process queue
+// process queued donations
 function processQueue() {
   if (isSpeaking || donationQueue.length === 0) return;
   isSpeaking = true;
@@ -31,11 +31,12 @@ function processQueue() {
   gifEl.src = "gifs/donation.gif";
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  messageEl.textContent = data.Message; // overlay shows only message
+  messageEl.textContent = data.Message; // only message on screen
 
   donationSound.currentTime = 0;
   donationSound.play().catch(e => console.warn("Sound failed:", e));
 
+  // TTS reads "via Developer Donate"
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(
       `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
@@ -48,7 +49,6 @@ function processQueue() {
     overlay.classList.add("show");
     speechSynthesis.speak(msg);
   } else {
-    // fallback if no TTS
     overlay.classList.add("show");
     setTimeout(() => {
       overlay.classList.remove("show");
@@ -58,7 +58,7 @@ function processQueue() {
   }
 }
 
-// Show donation if it matches filters
+// filter and queue donations
 function showDonation(data) {
   if (!data.UserId || !data.Username || !data.Amount) return;
   if (targetUserId && data.UserId !== targetUserId) return;
@@ -69,13 +69,12 @@ function showDonation(data) {
   processQueue();
 }
 
-// Listen for donations from Node.js WebSocket
+// WebSocket connection
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
   showDonation(data);
 };
 
-// Optional: log connection status
 socket.onopen = () => console.log("Connected to donation server");
 socket.onclose = () => console.warn("Disconnected from donation server");
 socket.onerror = (err) => console.error("WebSocket error:", err);
