@@ -1,4 +1,4 @@
-// WebSocket server URL
+// WebSocket server
 const socket = new WebSocket("wss://officialqua-tts-server-69.deno.dev/");
 
 // Sound effect
@@ -11,13 +11,17 @@ const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
 
-// TTS function
+// Speak function
 function speak(text) {
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.rate = 1;
-    msg.pitch = 1;
-    msg.volume = 1;
-    speechSynthesis.speak(msg);
+    if ('speechSynthesis' in window) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.rate = 1;
+        msg.pitch = 1;
+        msg.volume = 1;
+        speechSynthesis.speak(msg);
+    } else {
+        console.warn("SpeechSynthesis not supported in this browser.");
+    }
 }
 
 // Show donation overlay
@@ -36,9 +40,10 @@ function showDonation(data) {
     const ttsLine = `${data.username} donated ${data.amount} Robux via Developer Donate. ${data.message}`;
     speak(ttsLine);
 
-    // Display overlay
+    // Show overlay
     overlay.classList.add("show");
 
+    // Hide after 7 seconds
     setTimeout(() => {
         overlay.classList.remove("show");
     }, 7000);
@@ -50,12 +55,12 @@ socket.onmessage = (event) => {
     showDonation(data);
 };
 
-// Optional test donation every 10 seconds
+// Optional test donation every 10s
 setInterval(() => {
     showDonation({
         username: "Tester",
         amount: Math.floor(Math.random() * 100),
-        message: "This is a test!",
+        message: "This is a test message",
         gif: "gifs/donation.gif"
     });
 }, 10000);
