@@ -1,3 +1,9 @@
+// Get query parameters from URL
+const urlParams = new URLSearchParams(window.location.search);
+const targetUserId = urlParams.get("userid"); // only show donations for this user
+const minAmount = parseInt(urlParams.get("min")) || 0;
+const maxMessageLength = parseInt(urlParams.get("max")) || 999;
+
 const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
 const overlay = document.getElementById("overlay");
@@ -12,10 +18,14 @@ function showDonation(data) {
   // Ignore incomplete donations
   if (!data.UserId || !data.Username || !data.Amount) return;
 
+  // Only show donation if it matches the target UserId
+  if (targetUserId && data.UserId != parseInt(targetUserId)) return;
+  if (data.Amount < minAmount) return;
+  if (data.Message.length > maxMessageLength) return;
+
   gifEl.src = "gifs/donation.gif";
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  // ALWAYS append "via Developer Donate"
   messageEl.textContent = `${data.Message} (via Developer Donate)`;
 
   donationSound.currentTime = 0;
