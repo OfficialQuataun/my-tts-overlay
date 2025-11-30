@@ -13,11 +13,16 @@ const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
 const donationSound = new Audio("sounds/success.wav");
 
-// Queue to prevent overlapping TTS
+// Queue control
 let donationQueue = [];
 let isSpeaking = false;
 
-function processQueue() {
+// Clean messages for TTS (Streamlabs sometimes breaks on emojis or control chars)
+function cleanMessage(str) {
+  return str.replace(/[^\x00-\x7F]/g, "");
+}
+
+async function processQueue() {
   if (isSpeaking || donationQueue.length === 0) return;
   isSpeaking = true;
 
@@ -28,23 +33,47 @@ function processQueue() {
   amountEl.textContent = `${data.Amount} Robux`;
   messageEl.textContent = `${data.Message} (via Developer Donate)`;
 
+  // Audio fix for Streamlabs — must be promise handled
   donationSound.currentTime = 0;
-  donationSound.play();
+  try {
+    await donationSound.play();
+  } catch (err) {
+    console.warn("Audio autoplay blocked, but continuing anyway.");
+  }
 
-  if ('speechSynthesis' in window) {
+  overlay.classList.add("show");
+
+  // --- STREAMLABS TTS FIX BELOW ---
+  if ("speechSynthesis" in window) {
+    // Reset TTS — important for Streamlabs
+    speechSynthesis.cancel();
+
     const msg = new SpeechSynthesisUtterance(
-      `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
+      `${data.Username} donated ${data.Amount} Robux. ${cleanMessage(data.Message)}`
     );
+
+    msg.rate = 1;
+    msg.pitch = 1;
+
+    msg.onerror = () => {
+      console.error("TTS error");
+      overlay.classList.remove("show");
+      isSpeaking = false;
+      processQueue();
+    };
+
     msg.onend = () => {
       overlay.classList.remove("show");
       isSpeaking = false;
       processQueue();
     };
-    overlay.classList.add("show");
-    speechSynthesis.speak(msg);
+
+    // Small delay required in Streamlabs to avoid muted utterances
+    setTimeout(() => {
+      speechSynthesis.speak(msg);
+    }, 150);
   } else {
-    // fallback: just show overlay
-    overlay.classList.add("show");
+    // Fallback no-TTS mode
     setTimeout(() => {
       overlay.classList.remove("show");
       isSpeaking = false;
@@ -53,7 +82,6 @@ function processQueue() {
   }
 }
 
-// Show donation if it matches filters
 function showDonation(data) {
   if (!data.UserId || !data.Username || !data.Amount) return;
   if (targetUserId && data.UserId !== targetUserId) return;
@@ -64,7 +92,7 @@ function showDonation(data) {
   processQueue();
 }
 
-// Listen for donations
+// WebSocket listener
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
   showDonation(data);
