@@ -1,62 +1,47 @@
-// Connect to your server WebSocket
 const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
-// All overlay elements
 const overlay = document.getElementById("overlay");
-const gifEl = document.getElementById("gif");
 const nameEl = document.getElementById("name");
 const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
+const gifEl = document.getElementById("gif");
 
-// Donation sound
-const donateSound = new Audio("success.wav");
+const donationSound = new Audio("sounds/success.wav");
 
-// Hidden TTS frame
-const frame = document.getElementById("tts-frame");
-
-// Create speechSynthesis-enabled environment
-frame.srcdoc = `
-<html>
-<body>
-<script>
-window.say = function(text) {
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.rate = 1;
-    msg.pitch = 1;
-    speechSynthesis.speak(msg);
-}
-</script>
-</body>
-</html>
-`;
-
-function speak(text) {
-    frame.contentWindow.say(text);
-}
-
-// Show overlay + play TTS
+// Show donation
 function showDonation(data) {
+    if (!data.UserId || !data.Username || !data.Amount) return;
+
+    gifEl.src = "gifs/donation.gif";
     nameEl.textContent = data.Username;
-    amountEl.textContent = data.Amount + " Robux";
-    messageEl.textContent = data.Message || "";
-    gifEl.src = "donation.gif";
+    amountEl.textContent = `${data.Amount} Robux`;
+    messageEl.textContent = data.Message;
 
-    donateSound.currentTime = 0;
-    donateSound.play();
+    donationSound.currentTime = 0;
+    donationSound.play();
 
-    // TTS
-    const ttsText =
-        `${data.Username} donated ${data.Amount} Robux. ${data.Message || ""}`;
+    // SAFETY: Cancel previous queued TTS
+    speechSynthesis.cancel();
 
-    speak(ttsText);
+    // TTS message
+    if ("speechSynthesis" in window) {
+        const msg = new SpeechSynthesisUtterance(
+            `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
+        );
+        msg.rate = 1;
+        msg.pitch = 1;
+        speechSynthesis.speak(msg);
+    }
 
-    // Show animation
     overlay.classList.add("show");
-    setTimeout(() => overlay.classList.remove("show"), 6000);
+
+    setTimeout(() => {
+        overlay.classList.remove("show");
+    }, 7000);
 }
 
-// Listen for donations
-socket.onmessage = event => {
+// WebSocket listen
+socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     showDonation(data);
 };
