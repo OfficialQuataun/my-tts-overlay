@@ -9,7 +9,7 @@ const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
 
 // Donation sound
-const donateSound = new Audio("donation.wav");
+const donateSound = new Audio("success.wav");
 
 // Hidden TTS frame
 const frame = document.getElementById("tts-frame");
