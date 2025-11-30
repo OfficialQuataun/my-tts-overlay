@@ -1,4 +1,3 @@
-// Connect to your WebSocket server
 const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
 const overlay = document.getElementById("overlay");
@@ -8,8 +7,15 @@ const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
 const donationSound = new Audio("sounds/success.wav");
 
+let lastDonationId = null; // Prevent duplicate triggers
+
 function showDonation(data) {
+    // Skip incomplete donations
     if (!data.UserId || !data.Username || !data.Amount) return;
+
+    // Prevent duplicate display
+    if (lastDonationId === data.UserId + data.Amount + data.Message) return;
+    lastDonationId = data.UserId + data.Amount + data.Message;
 
     gifEl.src = "gifs/donation.gif";
     nameEl.textContent = data.Username;
