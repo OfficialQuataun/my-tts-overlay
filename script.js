@@ -9,6 +9,9 @@ const donationSound = new Audio("sounds/success.wav");
 
 // Show donation overlay
 function showDonation(data) {
+  // Remove any fake/test donations
+  if (!data.UserId || !data.Username || !data.Amount) return;
+
   gifEl.src = "gifs/donation.gif";
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
@@ -19,7 +22,7 @@ function showDonation(data) {
 
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(
-      `${data.Username} donated ${data.Amount} Robux. ${data.Message}`
+      `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
     );
     speechSynthesis.speak(msg);
   }
