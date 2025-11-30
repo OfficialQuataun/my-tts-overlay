@@ -1,66 +1,54 @@
-// WebSocket server
-const socket = new WebSocket("wss://officialqua-tts-server-69.deno.dev/");
+// Overlay WebSocket
+const socket = new WebSocket("wss://tts-donation-server.onrender.com");
 
-// Sound effect
-const donationSound = new Audio("sounds/success.wav");
+// Get URL query parameters
+const params = new URLSearchParams(window.location.search);
+const filterUserId = params.get("userid");          // filter by user
+const minAmount = parseInt(params.get("min")) || 0; // min donation
+const maxMessageLength = parseInt(params.get("max")) || 500; // max message length
 
-// Overlay elements
 const overlay = document.getElementById("overlay");
 const nameEl = document.getElementById("name");
 const amountEl = document.getElementById("amount");
 const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
+const donationSound = new Audio("sounds/success.wav");
 
-// Speak function
+// TTS function
 function speak(text) {
-    if ('speechSynthesis' in window) {
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.rate = 1;
-        msg.pitch = 1;
-        msg.volume = 1;
-        speechSynthesis.speak(msg);
-    } else {
-        console.warn("SpeechSynthesis not supported in this browser.");
-    }
+  if ('speechSynthesis' in window) {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.rate = 1;
+    msg.pitch = 1;
+    msg.volume = 1;
+    speechSynthesis.speak(msg);
+  }
 }
 
-// Show donation overlay
+// Show overlay
 function showDonation(data) {
-    gifEl.src = "gifs/donation.gif";
+  gifEl.src = "gifs/donation.gif";
+  nameEl.textContent = data.username;
+  amountEl.textContent = `${data.amount} Robux`;
+  messageEl.textContent = data.message;
 
-    nameEl.textContent = data.username;
-    amountEl.textContent = `${data.amount} Robux`;
-    messageEl.textContent = data.message;
+  donationSound.currentTime = 0;
+  donationSound.play();
 
-    // Play sound
-    donationSound.currentTime = 0;
-    donationSound.play();
+  speak(`${data.username} donated ${data.amount} Robux via Developer Donate. ${data.message}`);
 
-    // Speak TTS
-    const ttsLine = `${data.username} donated ${data.amount} Robux via Developer Donate. ${data.message}`;
-    speak(ttsLine);
-
-    // Show overlay
-    overlay.classList.add("show");
-
-    // Hide after 7 seconds
-    setTimeout(() => {
-        overlay.classList.remove("show");
-    }, 7000);
+  overlay.classList.add("show");
+  setTimeout(() => overlay.classList.remove("show"), 7000);
 }
 
-// Handle real donations from WebSocket
+// Listen for donations
 socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    showDonation(data);
-};
+  const data = JSON.parse(event.data);
 
-// Optional test donation every 10s
-setInterval(() => {
-    showDonation({
-        username: "Tester",
-        amount: Math.floor(Math.random() * 100),
-        message: "This is a test message",
-        gif: "gifs/donation.gif"
-    });
-}, 10000);
+  // Apply filters
+  if (filterUserId && data.userid.toString() !== filterUserId) return;
+  if (data.amount < minAmount) return;
+  if (data.message.length > maxMessageLength) return;
+
+  showDonation(data);
+};
