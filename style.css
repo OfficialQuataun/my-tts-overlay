@@ -18,11 +18,17 @@ body, html {
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease; /* fade in/out */
+}
+
+#overlay.show {
+  opacity: 1;
 }
 
 #gif {
-  display: none; /* hidden until donation triggers */
-  width: 600px; /* bigger for OBS */
+  display: block;
+  width: 600px;
   height: auto;
   z-index: 1;
 }
