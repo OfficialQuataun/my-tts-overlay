@@ -1,6 +1,6 @@
 // URL query params
 const urlParams = new URLSearchParams(window.location.search);
-const targetUserId = Number(urlParams.get("userid")); // filter by UserId
+const targetUserId = Number(urlParams.get("userid")); // show only this user
 const minAmount = parseInt(urlParams.get("min")) || 0;
 const maxMessageLength = parseInt(urlParams.get("max")) || 999;
 
@@ -17,32 +17,41 @@ const donationSound = new Audio("sounds/success.wav");
 donationSound.volume = 1;
 donationSound.load();
 
-// donation queue
+// queue system
 let donationQueue = [];
 let isSpeaking = false;
 
-// process queued donations
+// track shown donations to prevent duplicates
+const shownDonations = new Set();
+
 function processQueue() {
   if (isSpeaking || donationQueue.length === 0) return;
   isSpeaking = true;
 
   const data = donationQueue.shift();
 
-  gifEl.src = "gifs/donation.gif";
+  // show GIF
+  gifEl.style.display = "block";
+  gifEl.src = ""; // reset GIF
+  gifEl.src = "gifs/donation.gif"; // restart GIF
+
+  // overlay text
   nameEl.textContent = data.Username;
   amountEl.textContent = `${data.Amount} Robux`;
-  messageEl.textContent = data.Message; // only message on screen
+  messageEl.textContent = data.Message; // only message, no "via Developer Donate"
 
+  // play sound
   donationSound.currentTime = 0;
   donationSound.play().catch(e => console.warn("Sound failed:", e));
 
-  // TTS reads "via Developer Donate"
+  // TTS reads with "via Developer Donate"
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(
       `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
     );
     msg.onend = () => {
       overlay.classList.remove("show");
+      gifEl.style.display = "none";
       isSpeaking = false;
       processQueue();
     };
@@ -52,24 +61,29 @@ function processQueue() {
     overlay.classList.add("show");
     setTimeout(() => {
       overlay.classList.remove("show");
+      gifEl.style.display = "none";
       isSpeaking = false;
       processQueue();
     }, 7000);
   }
 }
 
-// filter and queue donations
 function showDonation(data) {
   if (!data.UserId || !data.Username || !data.Amount) return;
   if (targetUserId && data.UserId !== targetUserId) return;
   if (data.Amount < minAmount) return;
   if (data.Message.length > maxMessageLength) return;
 
+  // prevent duplicates
+  const donationKey = `${data.UserId}-${data.Amount}-${data.Message}`;
+  if (shownDonations.has(donationKey)) return;
+  shownDonations.add(donationKey);
+
   donationQueue.push(data);
   processQueue();
 }
 
-// WebSocket connection
+// WebSocket listener
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
   showDonation(data);
