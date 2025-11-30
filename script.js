@@ -1,6 +1,6 @@
-// Get query parameters from URL
+// URL query params
 const urlParams = new URLSearchParams(window.location.search);
-const targetUserId = urlParams.get("userid"); // only show donations for this user
+const targetUserId = Number(urlParams.get("userid"));
 const minAmount = parseInt(urlParams.get("min")) || 0;
 const maxMessageLength = parseInt(urlParams.get("max")) || 999;
 
@@ -13,15 +13,15 @@ const messageEl = document.getElementById("message");
 const gifEl = document.getElementById("gif");
 const donationSound = new Audio("sounds/success.wav");
 
-// Show donation overlay
-function showDonation(data) {
-  // Ignore incomplete donations
-  if (!data.UserId || !data.Username || !data.Amount) return;
+// Queue to prevent overlapping TTS
+let donationQueue = [];
+let isSpeaking = false;
 
-  // Only show donation if it matches the target UserId
-  if (targetUserId && data.UserId != parseInt(targetUserId)) return;
-  if (data.Amount < minAmount) return;
-  if (data.Message.length > maxMessageLength) return;
+function processQueue() {
+  if (isSpeaking || donationQueue.length === 0) return;
+  isSpeaking = true;
+
+  const data = donationQueue.shift();
 
   gifEl.src = "gifs/donation.gif";
   nameEl.textContent = data.Username;
@@ -31,16 +31,37 @@ function showDonation(data) {
   donationSound.currentTime = 0;
   donationSound.play();
 
-  // TTS
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(
       `${data.Username} donated ${data.Amount} Robux via Developer Donate. ${data.Message}`
     );
+    msg.onend = () => {
+      overlay.classList.remove("show");
+      isSpeaking = false;
+      processQueue();
+    };
+    overlay.classList.add("show");
     speechSynthesis.speak(msg);
+  } else {
+    // fallback: just show overlay
+    overlay.classList.add("show");
+    setTimeout(() => {
+      overlay.classList.remove("show");
+      isSpeaking = false;
+      processQueue();
+    }, 7000);
   }
+}
 
-  overlay.classList.add("show");
-  setTimeout(() => overlay.classList.remove("show"), 7000);
+// Show donation if it matches filters
+function showDonation(data) {
+  if (!data.UserId || !data.Username || !data.Amount) return;
+  if (targetUserId && data.UserId !== targetUserId) return;
+  if (data.Amount < minAmount) return;
+  if (data.Message.length > maxMessageLength) return;
+
+  donationQueue.push(data);
+  processQueue();
 }
 
 // Listen for donations
